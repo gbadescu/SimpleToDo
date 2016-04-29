@@ -16,12 +16,18 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import io.realm.Realm;
+import io.realm.RealmConfiguration;
+
+
 public class MainActivity extends AppCompatActivity {
 
     ArrayList<String> items;
     ArrayAdapter<String> itemAdapter;
     ListView lvItems;
     private final int REQUEST_CODE = 20;
+    private Realm realm;
+    private RealmConfiguration realmConfig;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +40,10 @@ public class MainActivity extends AppCompatActivity {
         itemAdapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,items);
         lvItems.setAdapter(itemAdapter);
 
+        // Create the Realm configuration
+        realmConfig = new RealmConfiguration.Builder(this).build();
+        // Open the Realm for the UI thread.
+        realm = Realm.getInstance(realmConfig);
 
         setupListViewListener();
     }
@@ -138,5 +148,24 @@ public class MainActivity extends AppCompatActivity {
         String itemText = etNewItem.getText().toString();
         itemAdapter.add(itemText);
         etNewItem.setText("");
+
+        realm.beginTransaction();
+
+        // Add a person
+        Item item = realm.createObject(Item.class);
+        item.setRemoteId(1);
+        item.setName(itemText);
+
+        // When the transaction is committed, all changes a synced to disk.
+        realm.commitTransaction();
+
+
+        long count  = realm.where(Item.class).count();
+
+        String s = ""+count;
+
+        Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
+
+
     }
 }
